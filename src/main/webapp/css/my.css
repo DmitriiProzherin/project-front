@@ -13,3 +13,7 @@ th, td {
 th {
     background-color: #f2f2f2;
 }
+
+.pagination {
+    padding: 0;
+}

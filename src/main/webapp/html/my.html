@@ -1,13 +1,91 @@
-<html>
+<!DOCTYPE html>
+<html lang="ru">
 <head>
+
     <meta charset="UTF-8">
     <title>RPG</title>
     <script src=https://code.jquery.com/jquery-3.6.0.min.js></script>
+    <script>
+
+        function countPlayers() {
+            return $.get("rest/players/count", function (data){
+                return parseInt(data, 10)
+            })
+        }
+
+        function getPlayers(pageNumber, pageSize) {
+            const params = {
+                pageNumber: pageNumber,
+                pageSize: pageSize
+            };
+            $("#players-table tbody").empty()
+            $.get("/rest/players", params, function (data) {
+                $.each(data, function (index, item) {
+                    $("#players-table tbody")
+                        .append("<tr>"
+                            + "<td>" + item.id + "</td>"
+                            + "<td>" + item.name + "</td>"
+                            + "<td>" + item.title + "</td>"
+                            + "<td>" + item.race + "</td>"
+                            + "<td>" + item.profession + "</td>"
+                            + "<td>" + item.level + "</td>"
+                            + "<td>" + item.birthday + "</td>"
+                            + "<td>" + item.banned + "</td>"
+                            + "</tr>")
+                });
+            });
+        }
+
+        $(function (){
+            getPlayers(0, 5)
+
+            $('#tableRowsAmountSelector').on('change', function (){
+                let selected = $(this).val();
+                getPlayers(0, selected)
+            });
+
+            $('#prevPage').on('click', function () {
+                let element = $('#currentPage')
+                let pageValue = element.val()
+                let amountValue = $('#tableRowsAmountSelector').val()
+
+                if (pageValue > 1) {
+                    pageValue--;
+                    element.val(pageValue).text('#'+pageValue)
+                    getPlayers(pageValue-1, amountValue)
+                }
+            })
+
+            $('#nextPage').on('click', function () {
+                let element = $('#currentPage')
+                let pageValue = element.val()
+                let amountValue = $('#tableRowsAmountSelector').val()
+                let max = countPlayers()
+                console.log(max)
+                console.log(amountValue)
+                console.log(Math.ceil(max/amountValue))
+                if (pageValue <= max) {
+                    pageValue++;
+                    element.val(pageValue).text('#'+pageValue)
+                    getPlayers(pageValue-1, amountValue)
+                }
+            })
+        })
+
+
+    </script>
     <link href="/css/my.css" rel="stylesheet">
 </head>
 <body>
 <h1>RPG admin panel</h1>
-<table>
+<label for="tableRowsAmountSelector"> Count per page:</label>
+<select id="tableRowsAmountSelector">
+    <option value="5">5</option>
+    <option value="10">10</option>
+    <option value="15">15</option>
+    <option value="20">20</option>
+</select>
+<table id="players-table">
     <thead>
     <tr>
         <th>#</th>
@@ -21,17 +99,12 @@
     </tr>
     </thead>
     <tbody>
-    <tr>
-        <td>Ячейка 1-1</td>
-        <td>Ячейка 1-2</td>
-        <td>Ячейка 1-3</td>
-        <td>Ячейка 1-4</td>
-        <td>Ячейка 1-5</td>
-        <td>Ячейка 1-6</td>
-        <td>Ячейка 1-7</td>
-        <td>Ячейка 1-8</td>
-    </tr>
     </tbody>
 </table>
+<div class="pagination">
+    <button id="prevPage">&lt;&lt;</button>
+    <button id="currentPage" VALUE="1">#1</button>
+    <button id="nextPage">&gt;&gt;</button>
+</div>
 </body>
 </html>
