@@ -6,9 +6,132 @@
     <title>RPG</title>
     <script src=https://code.jquery.com/jquery-3.6.0.min.js></script>
     <script>
+        let toggle = true;
+
+        function updateContent(cells) {
+            cells.forEach(cell => {
+                let text = cell.textContent
+                let id = cell.parentNode.cells[0].textContent
+                let field;
+                switch (cell.cellIndex) {
+                    case 1: {
+                        field = 'name';
+                        break;
+                    }
+                    case 2: {
+                        field = 'title';
+                        break;
+                    }
+                    case 3: {
+                        field = 'race';
+                        break;
+                    }
+                    case 4: {
+                        field = 'profession';
+                        break;
+                    }
+
+                }
+                console.log(field)
+                let data = {};
+                data[field] = text;
+                console.log(data)
+                $.ajax({
+                    url: `rest/players/${id}`,
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(data),
+                    error: function (msg) {
+                        console.error(`Player wasn't updated${msg}\n
+                    Tried to update: ${field} with ${text}`)
+                    }
+                })
+            })
+
+        }
+
+        function showInputInACell(cell) {
+            let text = cell.textContent;
+            cell.textContent = null;
+
+            let form = document.createElement('form');
+            let input = document.createElement('input');
+            input.type = 'text';
+            input.value = text;
+            form.appendChild(input);
+            cell.appendChild(form);
+
+        }
+
+        function saveInputInACell(cell) {
+            let input = cell.querySelector('input').value;
+            cell.removeChild(cell.querySelector('form'));
+            cell.textContent = input;
+        }
+
+        function editPlayer(row, element) {
+            let button = row.cells[row.cells.length - 1].querySelector('button');
+            let image = element.querySelector('img');
+            let nameCell = row.cells[1]
+            let titleCell = row.cells[2]
+            let raceCell = row.cells[3]
+            let professionCell = row.cells[4]
+            let cells = [nameCell, titleCell, raceCell, professionCell]
+            if (toggle) {
+                if (button) {
+                    button.style.display = 'none';
+                } else {
+                    console.error('Button is not found!');
+                }
+                if (image) {
+                    image.src = '../img/save.png';
+                } else {
+                    console.error('Image is not found!');
+                }
+                showInputInACell(nameCell)
+                showInputInACell(titleCell)
+                // showInputInACell(raceCell)
+                // showInputInACell(titleCell)
+
+                toggle = !toggle;
+            } else {
+                if (button) {
+                    button.style.display = 'inline';
+                } else {
+                    console.error('Button is not found!')
+                }
+                if (image) {
+                    image.src = '../img/edit.png';
+                } else {
+                    console.error('Image is not found!');
+                }
+                saveInputInACell(nameCell)
+                saveInputInACell(titleCell)
+                updateContent(cells)
+
+                toggle = !toggle;
+            }
+        }
+
+        function deletePlayer(row) {
+            let id = row.cells[0].textContent
+
+            $.ajax({
+                url: `/rest/players/${id}`,
+                type: 'DELETE',
+                error: function (error) {
+                    console.error('Ошибка при выполнении DELETE запроса:', error);
+                }
+            });
+
+            let amountValue = $('#tableRowsAmountSelector').val()
+            let pageValue = $('#currentPage').val()
+
+            getPlayers(pageValue, amountValue)
+        }
 
         function countPlayers() {
-            return $.get("rest/players/count", function (data){
+            return $.get("rest/players/count", function (data) {
                 return parseInt(data, 10)
             })
         }
@@ -23,7 +146,7 @@
                 $.each(data, function (index, item) {
                     $("#players-table tbody")
                         .append("<tr>"
-                            + "<td>" + item.id + "</td>"
+                            + `<td>${item.id}</td>`
                             + "<td>" + item.name + "</td>"
                             + "<td>" + item.title + "</td>"
                             + "<td>" + item.race + "</td>"
@@ -31,15 +154,21 @@
                             + "<td>" + item.level + "</td>"
                             + "<td>" + item.birthday + "</td>"
                             + "<td>" + item.banned + "</td>"
+                            + "<td> " +
+                            "<button class='edit-button' onclick='editPlayer(this.parentNode.parentNode, this)'><img class='edit-image' src='../img/edit.png' /></button>" +
+                            "</td>"
+                            + "<td> " +
+                            "<button class='delete-button' onclick='deletePlayer(this.parentNode.parentNode)'> <img src='../img/delete.png'  alt='none' /></button>"
+                            + "</td>"
                             + "</tr>")
                 });
             });
         }
 
-        $(function (){
+        $(function () {
             getPlayers(0, 5)
 
-            $('#tableRowsAmountSelector').on('change', function (){
+            $('#tableRowsAmountSelector').on('change', function () {
                 let selected = $(this).val();
                 getPlayers(0, selected)
             });
@@ -51,8 +180,8 @@
 
                 if (pageValue > 1) {
                     pageValue--;
-                    element.val(pageValue).text('#'+pageValue)
-                    getPlayers(pageValue-1, amountValue)
+                    element.val(pageValue).text('#' + pageValue)
+                    getPlayers(pageValue - 1, amountValue)
                 }
             })
 
@@ -61,13 +190,11 @@
                 let pageValue = element.val()
                 let amountValue = $('#tableRowsAmountSelector').val()
                 let max = countPlayers()
-                console.log(max)
-                console.log(amountValue)
-                console.log(Math.ceil(max/amountValue))
+
                 if (pageValue <= max) {
                     pageValue++;
-                    element.val(pageValue).text('#'+pageValue)
-                    getPlayers(pageValue-1, amountValue)
+                    element.val(pageValue).text('#' + pageValue)
+                    getPlayers(pageValue - 1, amountValue)
                 }
             })
         })
@@ -88,14 +215,16 @@
 <table id="players-table">
     <thead>
     <tr>
-        <th>#</th>
-        <th>Name</th>
-        <th>Title</th>
-        <th>Race</th>
-        <th>Profession</th>
-        <th>Level</th>
-        <th>Birthday</th>
-        <th>Banned</th>
+        <th style="width: 10px">#</th>
+        <th style="width: 100px">Name</th>
+        <th style="width: 100px">Title</th>
+        <th style="width: 100px">Race</th>
+        <th style="width: 100px">Profession</th>
+        <th style="width: 100px">Level</th>
+        <th style="width: 100px">Birthday</th>
+        <th style="width: 100px">Banned</th>
+        <th style="width: 50px">Edit</th>
+        <th style="width: 50px">Delete</th>
     </tr>
     </thead>
     <tbody>
