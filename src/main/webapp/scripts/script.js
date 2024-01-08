@@ -3,7 +3,8 @@ let races = new Set(['HUMAN', 'DWARF', 'ELF', 'GIANT', 'ORC', 'TROLL', 'HOBBIT']
 let professions = new Set(['WARRIOR', 'ROGUE', 'SORCERER', 'CLERIC', 'PALADIN', 'NAZGUL', 'WARLOCK', 'DRUID']);
 let bannedOptions = new Set(['true', 'false']);
 
-function updateContent(row) {
+
+function updatePlayer(row) {
     let id = row.cells[0].textContent
     let data = {};
 
@@ -133,7 +134,7 @@ function editPlayer(row, element) {
         saveSelectInACell(raceCell)
         saveSelectInACell(professionCell)
         saveSelectInACell(bannedCell)
-        updateContent(row)
+        updatePlayer(row)
 
         toggle = !toggle;
     }
@@ -150,16 +151,60 @@ function deletePlayer(row) {
         }
     });
 
-    let amountValue = $('#tableRowsAmountSelector').val()
-    let pageValue = $('#currentPage').val()
+    let amountValue = $('#tableRowsAmountSelector').val();
+    let pageValue = $('#currentPage').val();
 
-    getPlayers(pageValue, amountValue)
+    getPlayers(pageValue, amountValue);
+}
+
+function createPlayer() {
+    let form = document.getElementById('new-player-form');
+
+    let data = {};
+    let name = form.querySelector('#name').value;
+    let title = form.querySelector('#title').value;
+    let race = form.querySelector('#race').value;
+    let profession = form.querySelector('#profession').value;
+    let level = form.querySelector('#level').value;
+    let birthday = new Date(form.querySelector('#birthday').value).getTime();
+    let selector = form.querySelector('#banned');
+    let banned = selector.options[selector.selectedIndex].textContent;
+
+    data['name'] = name;
+    data['title'] = title;
+    data['race'] = race;
+    data['profession'] = profession;
+    data['birthday'] = birthday;
+    if (banned !== "") data['banned'] = banned;
+    data['level'] = level;
+
+    $.ajax({
+        url: '/rest/players',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(data),
+        success: [
+            function (response) {
+                console.info(`Player was created${response}`);
+
+                let amountValue = $('#tableRowsAmountSelector').val();
+                let pageValue = $('#currentPage').val();
+
+                getPlayers(pageValue, amountValue);
+            }
+        ],
+        error: function (msg) {
+            console.error(`Player wasn't created${msg}`);
+        }
+    })
 }
 
 function countPlayers() {
-    return $.get("rest/players/count", function (data) {
-        return parseInt(data, 10)
+    let count = 0;
+    $.get("rest/players/count", function (data) {
+        count = parseInt(data);
     })
+    return count;
 }
 
 function getPlayers(pageNumber, pageSize) {
@@ -173,15 +218,15 @@ function getPlayers(pageNumber, pageSize) {
             $("#players-table tbody")
                 .append("<tr>"
                     + `<td>${item.id}</td>`
-                    + "<td>" + item.name + "</td>"
-                    + "<td>" + item.title + "</td>"
-                    + "<td>" + item.race + "</td>"
-                    + "<td>" + item.profession + "</td>"
-                    + "<td>" + item.level + "</td>"
-                    + "<td>" + item.birthday + "</td>"
-                    + "<td>" + item.banned + "</td>"
+                    + `<td>${item.name}</td>`
+                    + `<td>${item.title}</td>`
+                    + `<td>${item.race}</td>`
+                    + `<td>${item.profession}</td>`
+                    + `<td>${item.level}</td>`
+                    + `<td>${item.birthday}</td>`
+                    + `<td>${item.banned}</td>`
                     + "<td> " +
-                    "<button class='edit-button' onclick='editPlayer(this.parentNode.parentNode, this)'><img class='edit-image' src='../img/edit.png' /></button>" +
+                    "<button class='edit-button' onclick='editPlayer(this.parentNode.parentNode, this)'><img class='edit-image' src='../img/edit.png'  alt='whoops'/></button>" +
                     "</td>"
                     + "<td> " +
                     "<button class='delete-button' onclick='deletePlayer(this.parentNode.parentNode)'> <img src='../img/delete.png'  alt='none' /></button>"
@@ -215,12 +260,17 @@ $(function () {
         let element = $('#currentPage')
         let pageValue = element.val()
         let amountValue = $('#tableRowsAmountSelector').val()
-        let max = countPlayers()
+        let max = 0;
 
-        if (pageValue <= max) {
+
+        if (pageValue <= 800) {
             pageValue++;
             element.val(pageValue).text('#' + pageValue)
             getPlayers(pageValue - 1, amountValue)
         }
     })
+
+    $('#new-player-form').on('click', function () {
+
+    });
 })

@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-
     <meta charset="UTF-8">
     <title>RPG</title>
     <script src=https://code.jquery.com/jquery-3.6.0.min.js></script>
@@ -9,36 +8,84 @@
     <link href="/css/my.css" rel="stylesheet">
 </head>
 <body>
-<h1>RPG admin panel</h1>
-<label for="tableRowsAmountSelector"> Count per page:</label>
-<select id="tableRowsAmountSelector">
-    <option value="5">5</option>
-    <option value="10">10</option>
-    <option value="15">15</option>
-    <option value="20">20</option>
-</select>
-<table id="players-table">
-    <thead>
-    <tr>
-        <th style="width: 10px">#</th>
-        <th style="width: 100px">Name</th>
-        <th style="width: 100px">Title</th>
-        <th style="width: 100px">Race</th>
-        <th style="width: 100px">Profession</th>
-        <th style="width: 100px">Level</th>
-        <th style="width: 100px">Birthday</th>
-        <th style="width: 100px">Banned</th>
-        <th style="width: 50px">Edit</th>
-        <th style="width: 50px">Delete</th>
-    </tr>
-    </thead>
-    <tbody>
-    </tbody>
-</table>
-<div class="pagination">
-    <button id="prevPage">&lt;&lt;</button>
-    <button id="currentPage" VALUE="1">#1</button>
-    <button id="nextPage">&gt;&gt;</button>
+<div id="container">
+    <h1>RPG admin panel</h1>
+    <div id="table-form">
+        <h2>Accounts list</h2>
+        <label for="tableRowsAmountSelector"> Count per page:</label>
+        <select id="tableRowsAmountSelector">
+            <option value="5">5</option>
+            <option value="10">10</option>
+            <option value="15">15</option>
+            <option value="20">20</option>
+        </select>
+        <table id="players-table">
+            <thead>
+            <tr>
+                <th style="width: 10px">#</th>
+                <th style="width: 100px">Name</th>
+                <th style="width: 100px">Title</th>
+                <th style="width: 100px">Race</th>
+                <th style="width: 100px">Profession</th>
+                <th style="width: 100px">Level</th>
+                <th style="width: 100px">Birthday</th>
+                <th style="width: 100px">Banned</th>
+                <th style="width: 50px">Edit</th>
+                <th style="width: 50px">Delete</th>
+            </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+        <div class="pagination">
+            <button id="prevPage">&lt;&lt;</button>
+            <button id="currentPage" VALUE="1">#1</button>
+            <button id="nextPage">&gt;&gt;</button>
+        </div>
+    </div>
+    <div id="new-player-form">
+        <h3>Create new account</h3>
+        <div>
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name">
+        </div>
+
+        <div>
+            <label for="title">Title:</label>
+            <input type="text" id="title" name="title">
+        </div>
+
+        <div>
+            <label for="race">Race:</label>
+            <input type="text" id="race" name="race">
+        </div>
+
+        <div>
+            <label for="profession">Profession:</label>
+            <input type="text" id="profession" name="profession">
+        </div>
+
+        <div>
+            <label for="level">Level:</label>
+            <input type="number" id="level" min="1" name="level">
+        </div>
+
+        <div>
+            <label for="birthday">Birthday:</label>
+            <input type="date" id="birthday" name="birthday">
+        </div>
+
+        <div>
+            <label for="banned">Banned:</label>
+            <select id="banned" name="baned">
+                <option selected disabled></option>
+                <option value="true">true</option>
+                <option value="false">false</option>
+            </select>
+        </div>
+
+        <button id="create-player-button" onclick="createPlayer()">Create Player</button>
+    </div>
 </div>
 </body>
 </html>

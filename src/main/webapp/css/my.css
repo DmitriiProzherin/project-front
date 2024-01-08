@@ -1,7 +1,21 @@
-#players-table {
+#container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+#table-form {
+    position: relative;
     width: 80%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    text-align: center;
+}
+
+#players-table {
+    width: 100%;
     border-collapse: collapse;
-    margin: 20px 0;
 }
 
 #players-table th, td {
@@ -18,6 +32,32 @@
     text-align: left;
 }
 
-.pagination {
-    padding: 0;
+#new-player-form {
+    position: relative;
+    width: 400px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    text-align: center;
+}
+
+#new-player-form div {
+    margin-bottom: 10px;
+}
+
+#new-player-form div label{
+    display: block;
+    margin-bottom: 5px;
+}
+
+#new-player-form div input {
+    width: 100%;
+    padding: 8px;
+    box-sizing: border-box;
+}
+
+#banned {
+    width: 100%;
+    padding: 8px;
+    box-sizing: border-box;
 }
