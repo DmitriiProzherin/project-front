@@ -7,45 +7,43 @@
     <script src=https://code.jquery.com/jquery-3.6.0.min.js></script>
     <script>
         let toggle = true;
+        let races = new Set(['HUMAN', 'DWARF', 'ELF', 'GIANT', 'ORC', 'TROLL', 'HOBBIT']);
+        let professions = new Set(['WARRIOR', 'ROGUE', 'SORCERER', 'CLERIC', 'PALADIN', 'NAZGUL', 'WARLOCK', 'DRUID']);
+        let bannedOptions = new Set(['true', 'false']);
 
-        function updateContent(cells) {
-            cells.forEach(cell => {
-                let text = cell.textContent
-                let id = cell.parentNode.cells[0].textContent
-                let field;
-                switch (cell.cellIndex) {
-                    case 1: {
-                        field = 'name';
-                        break;
-                    }
-                    case 2: {
-                        field = 'title';
-                        break;
-                    }
-                    case 3: {
-                        field = 'race';
-                        break;
-                    }
-                    case 4: {
-                        field = 'profession';
-                        break;
-                    }
+        function updateContent(row) {
+            let id = row.cells[0].textContent
+            let field;
+            let data = {};
 
+            for (let i = 0; i < row.cells.length; i++) {
+                let text = row.cells[i].textContent
+                if (i === 1) {
+                    data['name'] = text;
                 }
-                let data = {};
-                data[field] = text;
-                $.ajax({
-                    url: `rest/players/${id}`,
-                    type: 'POST',
-                    contentType: 'application/json',
-                    data: JSON.stringify(data),
-                    error: function (msg) {
-                        console.error(`Player wasn't updated${msg}\n
-                    Tried to update: ${field} with ${text}`)
-                    }
-                })
-            })
+                else if (i === 2) {
+                    data['title'] = text;
+                }
+                else if (i === 3) {
+                    data['race'] = text;
+                }
+                else if (i === 4) {
+                    data['profession'] = text;
+                }
+                else if (i === 7) {
+                    data['banned'] = text;
+                }
+            }
 
+            $.ajax({
+                url: `rest/players/${id}`,
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                error: function (msg) {
+                    console.error(`Player ${id} wasn't updated${msg}`);
+                }
+            })
         }
 
         function showInputInACell(cell) {
@@ -66,9 +64,32 @@
             cell.textContent = null;
 
             let select = document.createElement('select');
-            let option = document.createElement('option');
-            option.textContent = text;
-            select.appendChild(option);
+
+            if (cell.cellIndex === 3) {
+                races.forEach(el => {
+                    let child = document.createElement('option');
+                    child.textContent = el;
+                    if (el === text) child.selected = true;
+                    select.appendChild(child)
+                })
+            }
+            else if (cell.cellIndex === 4) {
+                professions.forEach(el => {
+                    let child = document.createElement('option');
+                    child.textContent = el;
+                    if (el === text) child.selected = true;
+                    select.appendChild(child)
+                })
+            }
+            else if (cell.cellIndex === 7) {
+                bannedOptions.forEach(el => {
+                    let child = document.createElement('option');
+                    child.textContent = el;
+                    if (el === text) child.selected = true;
+                    select.appendChild(child)
+                })
+            }
+
             cell.appendChild(select);
         }
 
@@ -79,7 +100,9 @@
         }
 
         function saveSelectInACell(cell) {
-
+            let input = cell.querySelector('option:checked').value;
+            cell.removeChild(cell.querySelector('select'));
+            cell.textContent = input;
         }
 
         function editPlayer(row, element) {
@@ -89,7 +112,8 @@
             let titleCell = row.cells[2]
             let raceCell = row.cells[3]
             let professionCell = row.cells[4]
-            let cells = [nameCell, titleCell, raceCell, professionCell]
+            let bannedCell = row.cells[7]
+
             if (toggle) {
                 if (button) {
                     button.style.display = 'none';
@@ -105,6 +129,7 @@
                 showInputInACell(titleCell)
                 showSelectInACell(raceCell)
                 showSelectInACell(professionCell)
+                showSelectInACell(bannedCell)
 
                 toggle = !toggle;
             } else {
@@ -122,7 +147,8 @@
                 saveInputInACell(titleCell)
                 saveSelectInACell(raceCell)
                 saveSelectInACell(professionCell)
-                updateContent(cells)
+                saveSelectInACell(bannedCell)
+                updateContent(row)
 
                 toggle = !toggle;
             }
