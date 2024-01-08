@@ -158,12 +158,14 @@ function createPlayer() {
     let data = {};
     let name = form.querySelector('#name').value;
     let title = form.querySelector('#title').value;
-    let race = form.querySelector('#race').value;
-    let profession = form.querySelector('#profession').value;
+    let raceSelector = form.querySelector('#race-selector');
+    let race = raceSelector.options[raceSelector.selectedIndex].textContent;
+    let professionSelector = form.querySelector('#profession-selector');
+    let profession = professionSelector.options[professionSelector.selectedIndex].textContent;
     let level = form.querySelector('#level').value;
     let birthday = new Date(form.querySelector('#birthday').value).getTime();
-    let selector = form.querySelector('#banned');
-    let banned = selector.options[selector.selectedIndex].textContent;
+    let bannedSelector = form.querySelector('#banned');
+    let banned = bannedSelector.options[bannedSelector.selectedIndex].textContent;
 
     data['name'] = name;
     data['title'] = title;
