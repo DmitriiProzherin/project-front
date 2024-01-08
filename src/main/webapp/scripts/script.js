@@ -1,9 +1,10 @@
 let toggle = true;
-let races = new Set(['HUMAN', 'DWARF', 'ELF', 'GIANT', 'ORC', 'TROLL', 'HOBBIT']);
-let professions = new Set(['WARRIOR', 'ROGUE', 'SORCERER', 'CLERIC', 'PALADIN', 'NAZGUL', 'WARLOCK', 'DRUID']);
-let bannedOptions = new Set(['true', 'false']);
+let races =['HUMAN', 'DWARF', 'ELF', 'GIANT', 'ORC', 'TROLL', 'HOBBIT'];
+let professions =['WARRIOR', 'ROGUE', 'SORCERER', 'CLERIC', 'PALADIN', 'NAZGUL', 'WARLOCK', 'DRUID'];
+let bannedOptions = ['true', 'false'];
 
-function updateContent(row) {
+
+function updatePlayer(row) {
     let id = row.cells[0].textContent
     let data = {};
 
@@ -46,33 +47,28 @@ function showInputInACell(cell) {
 
 }
 
+function createSelector(array, defVal){
+    let select = document.createElement('select');
+    array.forEach(el => {
+        let child = document.createElement('option');
+        child.textContent = el;
+        if (el === defVal) child.selected = true;
+        select.appendChild(child)
+    })
+    return select;
+}
+
 function showSelectInACell(cell) {
     let text = cell.textContent;
     cell.textContent = null;
-
-    let select = document.createElement('select');
+    let select;
 
     if (cell.cellIndex === 3) {
-        races.forEach(el => {
-            let child = document.createElement('option');
-            child.textContent = el;
-            if (el === text) child.selected = true;
-            select.appendChild(child)
-        })
+        select = createSelector(races, text);
     } else if (cell.cellIndex === 4) {
-        professions.forEach(el => {
-            let child = document.createElement('option');
-            child.textContent = el;
-            if (el === text) child.selected = true;
-            select.appendChild(child)
-        })
+        select = createSelector(professions, text);
     } else if (cell.cellIndex === 7) {
-        bannedOptions.forEach(el => {
-            let child = document.createElement('option');
-            child.textContent = el;
-            if (el === text) child.selected = true;
-            select.appendChild(child)
-        })
+        select = createSelector(bannedOptions, "")
     }
 
     cell.appendChild(select);
@@ -133,7 +129,7 @@ function editPlayer(row, element) {
         saveSelectInACell(raceCell)
         saveSelectInACell(professionCell)
         saveSelectInACell(bannedCell)
-        updateContent(row)
+        updatePlayer(row)
 
         toggle = !toggle;
     }
@@ -150,16 +146,68 @@ function deletePlayer(row) {
         }
     });
 
-    let amountValue = $('#tableRowsAmountSelector').val()
-    let pageValue = $('#currentPage').val()
+    let amountValue = $('#tableRowsAmountSelector').val();
+    let pageValue = $('#currentPage').val();
 
-    getPlayers(pageValue, amountValue)
+    getPlayers(pageValue, amountValue);
+}
+
+function createPlayer() {
+    let form = document.getElementById('new-player-form');
+
+    let data = {};
+    let name = form.querySelector('#name').value;
+    let title = form.querySelector('#title').value;
+    let race = form.querySelector('#race').value;
+    let profession = form.querySelector('#profession').value;
+    let level = form.querySelector('#level').value;
+    let birthday = new Date(form.querySelector('#birthday').value).getTime();
+    let selector = form.querySelector('#banned');
+    let banned = selector.options[selector.selectedIndex].textContent;
+
+    data['name'] = name;
+    data['title'] = title;
+    data['race'] = race;
+    data['profession'] = profession;
+    data['birthday'] = birthday;
+    if (banned !== "") data['banned'] = banned;
+    data['level'] = level;
+
+    $.ajax({
+        url: '/rest/players',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(data),
+        success: [
+            function (response) {
+                console.info(`Player was created${response}`);
+
+                let amountValue = $('#tableRowsAmountSelector').val();
+                let pageValue = $('#currentPage').val();
+
+                getPlayers(pageValue, amountValue);
+            }
+        ],
+        error: function (msg) {
+            console.error(`Player wasn't created${msg}`);
+        }
+    })
 }
 
 function countPlayers() {
-    return $.get("rest/players/count", function (data) {
-        return parseInt(data, 10)
-    })
+    let url = 'rest/players/count';
+    let count = 0;
+    $.ajax({
+       url: url,
+       type: 'GET',
+       async: false,
+       success: [
+           function (result) {
+                count = result;
+           }
+       ]
+    });
+    return count;
 }
 
 function getPlayers(pageNumber, pageSize) {
@@ -173,15 +221,15 @@ function getPlayers(pageNumber, pageSize) {
             $("#players-table tbody")
                 .append("<tr>"
                     + `<td>${item.id}</td>`
-                    + "<td>" + item.name + "</td>"
-                    + "<td>" + item.title + "</td>"
-                    + "<td>" + item.race + "</td>"
-                    + "<td>" + item.profession + "</td>"
-                    + "<td>" + item.level + "</td>"
-                    + "<td>" + item.birthday + "</td>"
-                    + "<td>" + item.banned + "</td>"
+                    + `<td>${item.name}</td>`
+                    + `<td>${item.title}</td>`
+                    + `<td>${item.race}</td>`
+                    + `<td>${item.profession}</td>`
+                    + `<td>${item.level}</td>`
+                    + `<td>${item.birthday}</td>`
+                    + `<td>${item.banned}</td>`
                     + "<td> " +
-                    "<button class='edit-button' onclick='editPlayer(this.parentNode.parentNode, this)'><img class='edit-image' src='../img/edit.png' /></button>" +
+                    "<button class='edit-button' onclick='editPlayer(this.parentNode.parentNode, this)'><img class='edit-image' src='../img/edit.png'  alt='whoops'/></button>" +
                     "</td>"
                     + "<td> " +
                     "<button class='delete-button' onclick='deletePlayer(this.parentNode.parentNode)'> <img src='../img/delete.png'  alt='none' /></button>"
@@ -191,6 +239,37 @@ function getPlayers(pageNumber, pageSize) {
     });
 }
 
+function createDropdownsForANewPlayer(){
+    let raceSelector = createSelector(races, "");
+    let professionSelector = createSelector(professions, "");
+
+    raceSelector.style.width = '100%';
+    raceSelector.style.padding = '8px';
+    raceSelector.style.boxSizing = 'border-box';
+
+    professionSelector.style.width = '100%';
+    professionSelector.style.padding = '8px';
+    professionSelector.style.boxSizing = 'border-box';
+
+    raceSelector.id = 'race-selector';
+    professionSelector.id = 'profession-selector';
+
+    let raceLabel = document.createElement('label');
+    raceLabel.textContent = 'Race:';
+    raceLabel.setAttribute('for', raceSelector.id);
+
+    let professionLabel = document.createElement('label');
+    professionLabel.textContent = 'Profession:';
+    professionLabel.setAttribute('for', professionSelector.id);
+
+    let divRace = document.getElementById('div-for-race');
+    divRace.appendChild(raceLabel);
+    divRace.appendChild(raceSelector);
+
+    let divProfession = document.getElementById('div-for-profession');
+    divProfession.appendChild(professionLabel);
+    divProfession.appendChild(professionSelector);
+}
 $(function () {
     getPlayers(0, 5)
 
@@ -215,12 +294,18 @@ $(function () {
         let element = $('#currentPage')
         let pageValue = element.val()
         let amountValue = $('#tableRowsAmountSelector').val()
-        let max = countPlayers()
-
-        if (pageValue <= max) {
+        let players = countPlayers();
+        let max = Math.ceil(players / amountValue)
+        if (pageValue < max) {
             pageValue++;
             element.val(pageValue).text('#' + pageValue)
             getPlayers(pageValue - 1, amountValue)
         }
     })
+
+    $('#new-player-form').on('click', function () {
+
+    });
+
+    createDropdownsForANewPlayer();
 })
